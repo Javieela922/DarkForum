@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Social Network</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background-color: #000;
+            color: #fff;
+            height: 100%;
+        }
+        .container {
+            display: flex;
+            height: 100%;
+        }
+        .sidebar {
+            width: 300px;
+            background-color: #111;
+            padding: 20px;
+            border-right: 1px solid #fff;
+            box-shadow: 0 0 10px #fff;
+        }
+        .main-content {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .embed {
+            background-color: #222;
+            border: 1px solid #fff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+        }
+        .neon-text {
+            color: #fff;
+            text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #fff, 0 0 20px #fff;
+        }
+        input, button, textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #fff;
+            background-color: #000;
+            color: #fff;
+        }
+        button {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background-color: #fff;
+            color: #000;
+        }
+        .profile {
+            text-align: center;
+        }
+        .profile-pic {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin: 10px auto;
+            cursor: pointer;
+            border: 2px solid #fff;
+            box-shadow: 0 0 10px #fff;
+        }
+        .post {
+            margin-bottom: 20px;
+        }
+        .post-content {
+            margin-top: 10px;
+        }
+        .post img {
+            max-width: 100%;
+            border-radius: 5px;
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #f44336;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+            z-index: 1000;
+        }
+        #loginForm, #registerForm, #mainContent, #dmPage, #searchPage {
+            display: none;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .nav-buttons button {
+            width: auto;
+        }
+        .user-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 20px;
+        }
+        .user-card {
+            text-align: center;
+        }
+        .user-card img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin-bottom: 10px;
+        }
+        .dm-list {
+            display: flex;
+            flex-direction: column;
+        }
+        .dm-preview {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #fff;
+            cursor: pointer;
+        }
+        .dm-preview img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .dm-chat {
+            display: none;
+            height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="notification" id="notification"></div>
+
+    <div id="loginForm" class="embed">
+        <h2 class="neon-text">Login</h2>
+        <input type="text" id="loginUsername" placeholder="Username">
+        <input type="password" id="loginPassword" placeholder="Password">
+        <button onclick="login()">Login</button>
+        <p>Don't have an account? <a href="#" onclick="showRegister()">Register</a></p>
+    </div>
+
+    <div id="registerForm" class="embed">
+        <h2 class="neon-text">Register</h2>
+        <input type="text" id="registerUsername" placeholder="Username">
+        <input type="password" id="registerPassword" placeholder="Password">
+        <input type="password" id="confirmPassword" placeholder="Confirm Password">
+        <button onclick="register()">Register</button>
+        <p>Already have an account? <a href="#" onclick="showLogin()">Login</a></p>
+    </div>
+
+    <div id="mainContent" class="container">
+        <div class="sidebar">
+            <div class="profile embed">
+                <h3 class="neon-text" id="profileUsername"></h3>
+                <img src="/placeholder.svg?height=100&width=100" alt="Profile Picture" class="profile-pic" id="profilePic" onclick="changePicture()">
+            </div>
+            <div class="nav-buttons">
+                <button onclick="showMainContent()">Home</button>
+                <button onclick="showDMPage()">Messages</button>
+                <button onclick="showSearchPage()">Search</button>
+            </div>
+        </div>
+        <div class="main-content">
+            <div class="embed">
+                <h2 class="neon-text">Create Post</h2>
+                <textarea id="postContent" rows="4" placeholder="What's on your mind?"></textarea>
+                <input type="file" id="postImage" accept="image/*">
+                <button onclick="createPost()">Post</button>
+            </div>
+            <div id="posts"></div>
+        </div>
+    </div>
+
+    <div id="dmPage" class="container">
+        <div class="sidebar">
+            <div class="profile embed">
+                <h3 class="neon-text" id="dmProfileUsername"></h3>
+                <img src="/placeholder.svg?height=100&width=100" alt="Profile Picture" class="profile-pic" id="dmProfilePic">
+            </div>
+            <div class="nav-buttons">
+                <button onclick="showMainContent()">Home</button>
+                <button onclick="showDMPage()">Messages</button>
+                <button onclick="showSearchPage()">Search</button>
+            </div>
+        </div>
+        <div class="main-content">
+            <div class="embed">
+                <h2 class="neon-text">Direct Messages</h2>
+                <div class="dm-list" id="dmList"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="searchPage" class="container">
+        <div class="sidebar">
+            <div class="profile embed">
+                <h3 class="neon-text" id="searchProfileUsername"></h3>
+                <img src="/placeholder.svg?height=100&width=100" alt="Profile Picture" class="profile-pic" id="searchProfilePic">
+            </div>
+            <div class="nav-buttons">
+                <button onclick="showMainContent()">Home</button>
+                <button onclick="showDMPage()">Messages</button>
+                <button onclick="showSearchPage()">Search</button>
+            </div>
+        </div>
+        <div class="main-content">
+            <div class="embed">
+                <h2 class="neon-text">Search Users</h2>
+                <input type="text" id="searchUser" placeholder="Search users...">
+                <div class="user-list" id="searchResults"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.style.display = 'block';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        function showLogin() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'none';
+            document.getElementById('dmPage').style.display = 'none';
+            document.getElementById('searchPage').style.display = 'none';
+        }
+
+        function showRegister() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+            document.getElementById('mainContent').style.display = 'none';
+            document.getElementById('dmPage').style.display = 'none';
+            document.getElementById('searchPage').style.display = 'none';
+        }
+
+        function showMainContent() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'flex';
+            document.getElementById('dmPage').style.display = 'none';
+            document.getElementById('searchPage').style.display = 'none';
+        }
+
+        function showDMPage() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'none';
+            document.getElementById('dmPage').style.display = 'flex';
+            document.getElementById('searchPage').style.display = 'none';
+            document.getElementById('dmProfileUsername').textContent = currentUser;
+            document.getElementById('dmProfilePic').src = document.getElementById('profilePic').src;
+        }
+
+        function showSearchPage() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'none';
+            document.getElementById('dmPage').style.display = 'none';
+            document.getElementById('searchPage').style.display = 'flex';
+            document.getElementById('searchProfileUsername').textContent = currentUser;
+            document.getElementById('searchProfilePic').src = document.getElementById('profilePic').src;
+        }
+
+        function login() {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            if (username && password) {
+                // Here you would typically validate the login credentials with a server
+                // For this example, we'll use a dummy check
+                if (username === "admin" && password === "password") {
+                    currentUser = username;
+                    document.getElementById('profileUsername').textContent = username;
+                    showMainContent();
+                } else {
+                    showNotification("Login failed. Incorrect username or password.");
+                }
+            } else {
+                showNotification("Please enter both username and password");
+            }
+        }
+
+        function register() {
+            const username = document.getElementById('registerUsername').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            if (username && password && confirmPassword) {
+                if (password === confirmPassword) {
+                    // Here you would typically handle the registration process with a server
+                    currentUser = username;
+                    document.getElementById('profileUsername').textContent = username;
+                    showMainContent();
+                } else {
+                    showNotification("Passwords do not match");
+                }
+            } else {
+                showNotification("Please fill in all fields");
+            }
+        }
+
+        function changePicture() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = e => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    document.getElementById('profilePic').src = event.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+            input.click();
+        }
+
+        function createPost() {
+            const content = document.getElementById('postContent').value;
+            const imageFile = document.getElementById('postImage').files[0];
+            if (content || imageFile) {
+                const post = document.createElement('div');
+                post.className = 'post embed';
+                post.innerHTML = `
+                    <h4 class="neon-text">${currentUser}</h4>
+                    <p>${content}</p>
+                `;
+                if (imageFile) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const img = document.createElement('img');
+                        img.src = event.target.result;
+                        post.appendChild(img);
+                    }
+                    reader.readAsDataURL(imageFile);
+                }
+                document.getElementById('posts').prepend(post);
+                document.getElementById('postContent').value = '';
+                document.getElementById('postImage').value = '';
+            }
+        }
+
+        document.getElementById('searchUser').addEventListener('input', function(e) {
+            const searchTerm = e.target.value;
+            // Here you would typically search users from a database
+            // For this example, we'll use dummy results
+            if (searchTerm) {
+                const dummyUsers = ['user1', 'user2', 'user3', 'user4', 'user5'];
+                const results = dummyUsers.filter(user => user.includes(searchTerm));
+                document.getElementById('searchResults').innerHTML = results.map(user => `
+                    <div class="user-card embed">
+                        <img src="/placeholder.svg?height=100&width=100" alt="${user}">
+                        <h4>${user}</h4>
+                        <button onclick="openDM('${user}')">Message</button>
+                    </div>
+                `).join('');
+            } else {
+                document.getElementById('searchResults').innerHTML = '';
+            }
+        });
+
+        function openDM(username) {
+            showDMPage();
+            const dmList = document.getElementById('dmList');
+            if (!dmList.querySelector(`[data-username="${username}"]`)) {
+                const dmPreview = document.createElement('div');
+                dmPreview.className = 'dm-preview';
+                dmPreview.setAttribute('data-username', username);
+                dmPreview.innerHTML = `
+                    <img src="/placeholder.svg?height=50&width=50" alt="${username}">
+                    <span>${username}</span>
+                `;
+                dmPreview.onclick = () => showChat(username);
+                dmList.appendChild(dmPreview);
+            }
+            showChat(username);
+        }
+
+        function showChat(username) {
+            const dmList = document.getElementById('dmList');
+            const existingChat = dmList.querySelector('.dm-chat');
+            if (existingChat) {
+                existingChat.remove();
+            }
+            const dmChat = document.createElement('div');
+            dmChat.className = 'dm-chat embed';
+            dmChat.innerHTML = `
+                <h4 class="neon-text">${username}</h4>
+                <div class="chat-messages"></div>
+                <input type="text" placeholder="Type a message...">
+                <button onclick="sendDM('${username}')">Send</button>
+            `;
+            dmList.appendChild(dmChat);
+        }
+
+        function sendDM(username) {
+            const dmChat = document.querySelector('.dm-chat');
+            const input = dmChat.querySelector('input');
+            const message = input.value;
+            if (message) {
+                const chatMessages = dmChat.querySelector('.chat-messages');
+                chatMessages.innerHTML += `<p><strong>${currentUser}:</strong> ${message}</p>`;
+                input.value = '';
+            }
+        }
+
+        // Show login form by default
+        showLogin();
+    </script>
+</body>
+</html>
